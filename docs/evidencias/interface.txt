@@ -1,0 +1,10 @@
+PASSOU: Categorias: cadastro, renomeação e exclusão de categoria vazia pela interface.
+PASSOU: Exemplo completo: receitas 3050.00, despesas 600.00, saldo 2450.00; Alimentação -400.00.
+PASSOU: Valor zero rejeitado; formulário preservado e nenhum registro acrescentado.
+PASSOU: Filtros: categoria -400.00; categoria + receita 50.00; 07/11 a 08/11 inclusivos -100.00.
+PASSOU: Categoria em uso e categoria duplicada bloqueadas com aviso visível.
+PASSOU: Edição 450.00 -> 400.00: saldo 2500.00; cancelar exclusão preservou 4 registros; confirmar deixou saldo 2900.00.
+PASSOU: Janela fechada e reaberta: os 3 registros restantes mantiveram os mesmos IDs e valores no MySQL.
+PASSOU: Falha de consulta simulada: valores anteriores preservados, aviso de desatualização e gravação bloqueada; atualização recuperou a tela.
+PASSOU: Consulta válida sem resultados: zero movimentações e saldo 0.00.
+PASSOU: Conferência SQL independente: COUNT(*)=3; saldo armazenado nos lançamentos=2900.00.

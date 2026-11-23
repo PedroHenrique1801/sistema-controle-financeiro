@@ -1,0 +1,12 @@
+/target/
+/config.properties
+/config-teste.properties
+/sql/*.local.sql
+*.log
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db
