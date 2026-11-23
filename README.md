@@ -50,153 +50,231 @@ Não há framework de aplicação adicional. A interface usa Swing e a persistê
 
 O Shade gera um JAR que já inclui as dependências de execução. O MySQL é um servidor separado e precisa estar instalado e iniciado.
 
-## Preparar a máquina: Windows e VS Code
+## Instalação e execução
 
-Este é o caminho principal de instalação. Use os comandos na pasta que contém `pom.xml`.
+A aplicação funciona localmente, com interface gráfica em Java e armazenamento em MySQL. Para executá-la a partir deste repositório, é necessário preparar o banco de dados, configurar a conexão e compilar o código.
 
-### 1. Instalar o JDK 21
+### 1. Requisitos
 
-Baixe um **JDK 21 LTS**, como o [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21). Escolha o sistema e a arquitetura da sua máquina, e o tipo **JDK**. O JRE sozinho não basta para compilar.
+| Requisito | Versão ou condição |
+|---|---|
+| Java Development Kit — JDK | Java 21 |
+| MySQL Community Server | Linha 8.4 LTS; versão utilizada no projeto: 8.4.13 |
+| Internet | Necessária na primeira compilação para baixar o Maven e as dependências |
+| Ambiente gráfico | Necessário para abrir as janelas da aplicação |
+| Git | Opcional; utilizado para clonar o repositório |
+| VS Code ou outra IDE | Opcional; também é possível compilar e executar pelo terminal |
 
-No instalador, habilite a inclusão no `PATH` e, se disponível, a definição de `JAVA_HOME`. Feche e abra o terminal após a instalação. Confira no PowerShell:
+O projeto inclui o **Maven Wrapper**, que utiliza o Maven 3.9.9. As bibliotecas necessárias são baixadas durante a compilação, conforme as versões definidas no `pom.xml`.
 
-```powershell
-java -version
-javac -version
+Para instalar os requisitos, consulte [Eclipse Temurin — JDK 21](https://adoptium.net/temurin/releases/?version=21) e [MySQL Community Server](https://dev.mysql.com/downloads/mysql/8.4.html).
+
+### 2. Obter o código
+
+Com o Git instalado, execute no terminal:
+
+```bash
+git clone https://github.com/PedroHenrique1801/sistema-controle-financeiro.git
+cd sistema-controle-financeiro
 ```
 
-Ambos devem mostrar a versão principal `21`. Se aparecer outra versão, confira `where.exe java` e `where.exe javac`. Em Variáveis de Ambiente do Windows, `JAVA_HOME` deve apontar para a pasta do JDK, sem o sufixo `bin`; o `PATH` deve conter `%JAVA_HOME%\bin` antes de versões antigas.
+Também é possível baixar o código pela página do repositório, em **Code → Download ZIP**. Após extrair o arquivo, abra a pasta que contém `pom.xml`, `src`, `sql`, `mvnw` e `mvnw.cmd`.
 
-### 2. Instalar e iniciar o MySQL
+**Todos os comandos seguintes devem ser executados nessa pasta**, chamada de raiz do projeto.
 
-Instale o [MySQL Community Server 8.4 LTS](https://dev.mysql.com/downloads/mysql/8.4.html). A versão usada nos testes foi 8.4.13. Configure o servidor local na porta `3306`, defina a senha de administrador (`root`) e mantenha o serviço iniciado. Guarde essa senha para a configuração inicial.
+### 3. Verificar o ambiente
 
-O MySQL Workbench é opcional: ele ajuda a visualizar as tabelas durante a apresentação, mas não substitui o MySQL Server. MariaDB e SQLite não foram utilizados neste projeto.
+No terminal, confira as instalações:
 
-Confira no PowerShell:
-
-```powershell
+```bash
+java -version
+javac -version
 mysql --version
 ```
 
-Se o comando não for encontrado, acrescente a pasta `bin` da instalação ao `PATH`. Para a instalação padrão, apenas no terminal atual:
+Os comandos `java` e `javac` devem indicar Java 21. O comando `mysql` deve identificar o cliente MySQL instalado.
 
-```powershell
-$env:Path += ";C:\Program Files\MySQL\MySQL Server 8.4\bin"
-```
+Se algum comando não for encontrado, adicione a pasta `bin` da instalação correspondente à variável de ambiente `PATH` e abra um novo terminal.
 
-Adapte o caminho se instalou em outra pasta. Se houver outra aplicação usando a porta 3306, use a porta configurada para o seu MySQL tanto nos comandos quanto em `config.properties`.
+Caso `JAVA_HOME` esteja definida, ela deve apontar para a pasta do JDK 21, sem incluir `bin`.
 
-### 3. Abrir o projeto no VS Code
+O servidor MySQL precisa estar iniciado. Os exemplos deste guia utilizam o endereço local `127.0.0.1` e a porta `3306`. Se sua instalação utiliza outra porta, ajuste os comandos e a configuração da aplicação.
 
-Baixe o código ou extraia o ZIP. Abra o **diretório inteiro do projeto**, onde estão `pom.xml`, `mvnw.cmd`, `sql` e `src`, em **File > Open Folder**.
+### 4. Criar o banco de dados
 
-Instale o [VS Code](https://code.visualstudio.com/) e a extensão [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack), da Microsoft. O arquivo `.vscode/extensions.json` já recomenda essa extensão.
+Na raiz do projeto, abra o cliente MySQL com uma conta que tenha permissão para criar bancos, tabelas e usuários:
 
-Abra a paleta de comandos com `Ctrl+Shift+P`, execute **Java: Configure Java Runtime** e confira se o projeto usa JDK 21. Aguarde a importação do projeto Maven. Não é necessário criar outro projeto Java nem copiar os arquivos para uma pasta diferente.
-
-IntelliJ IDEA e Eclipse também podem importar o `pom.xml` como projeto Maven. O VS Code é a opção documentada aqui. Editores e extensões não são dependências do programa; suas versões não fazem parte do build e não foram usadas como ambiente de teste nesta entrega.
-
-### 4. Criar as tabelas
-
-No terminal integrado do VS Code, a partir da raiz do projeto:
-
-```powershell
+```bash
 mysql -h 127.0.0.1 -P 3306 -u root -p --default-character-set=utf8mb4
 ```
 
-Digite a senha quando solicitada. No prompt `mysql>`, execute:
+Informe a senha dessa conta quando solicitada.
+
+Quando aparecer o prompt **`mysql>`**, execute:
 
 ```sql
 SOURCE sql/01_estrutura.sql;
 SHOW TABLES;
 ```
 
-Devem aparecer `categoria` e `movimentacao`. O script cria o banco `controle_financeiro` e suas tabelas, sem apagar registros existentes. Ele é a estrutura inicial, não um mecanismo de atualização de esquemas de versões antigas.
+O script cria o banco `controle_financeiro` e as tabelas:
 
-Se já houver um banco homônimo de outro projeto com estrutura diferente, use uma instalação separada ou faça uma cópia do script e ajuste o nome do banco e a URL. Não apague os dados antigos para instalar esta aplicação.
+| Tabela | Finalidade |
+|---|---|
+| `categoria` | Armazenar as categorias usadas para classificar os registros |
+| `movimentacao` | Armazenar receitas e despesas, com descrição, valor, data, tipo e categoria |
 
-### 5. Criar o usuário da aplicação
+Se já existir um banco chamado `controle_financeiro` pertencente a outra aplicação, utilize outro nome no script e na configuração de conexão.
 
-Ainda no prompt do MySQL, execute os comandos abaixo, substituindo `SUA_SENHA_LOCAL` por uma senha escolhida por você:
+Ainda no prompt `mysql>`, crie o usuário da aplicação. **Substitua `SUA_SENHA` por uma senha escolhida para esse usuário antes de executar:**
 
 ```sql
-CREATE USER 'financeiro_app'@'localhost' IDENTIFIED BY 'SUA_SENHA_LOCAL';
+CREATE USER 'financeiro_app'@'localhost'
+IDENTIFIED BY 'SUA_SENHA';
+
 GRANT SELECT, INSERT, UPDATE, DELETE
-ON controle_financeiro.* TO 'financeiro_app'@'localhost';
+ON controle_financeiro.*
+TO 'financeiro_app'@'localhost';
+
 EXIT;
 ```
 
-O arquivo `sql/02_usuario.exemplo.sql` contém esse modelo. Se o usuário já existir, use a senha existente; para trocá-la, o administrador pode executar `ALTER USER 'financeiro_app'@'localhost' IDENTIFIED BY 'NOVA_SENHA_LOCAL';`. A aplicação não precisa utilizar `root` nem ter permissão para apagar tabelas.
+Se esse usuário já existir, utilize suas credenciais e confira se possui as permissões necessárias sobre o banco.
 
-Confira o acesso:
+Após `EXIT;`, os próximos comandos voltam a ser executados no terminal do sistema operacional.
 
-```powershell
-mysql -h 127.0.0.1 -P 3306 -u financeiro_app -p controle_financeiro
-```
+### 5. Configurar a conexão
 
-No MySQL, `SHOW TABLES;` deve funcionar. Use `EXIT;` para voltar ao PowerShell.
+Crie o arquivo de configuração a partir do exemplo incluído no projeto.
 
-### 6. Configurar a conexão
-
-No PowerShell:
+**Windows — PowerShell:**
 
 ```powershell
 Copy-Item config.exemplo.properties config.properties
 ```
 
-Abra `config.properties` e substitua `COLOQUE_SUA_SENHA_AQUI` pela senha do usuário `financeiro_app`. Mantenha o arquivo na raiz do projeto, com codificação UTF-8.
+**Linux e macOS:**
+
+```bash
+cp config.exemplo.properties config.properties
+```
+
+Abra `config.properties` em um editor de texto e preencha:
 
 ```properties
 db.url=jdbc:mysql://127.0.0.1:3306/controle_financeiro?sslMode=DISABLED&allowPublicKeyRetrieval=true&connectTimeout=5000&socketTimeout=10000&connectionTimeZone=LOCAL
 db.usuario=financeiro_app
-db.senha=COLOQUE_SUA_SENHA_AQUI
+db.senha=SUA_SENHA
 ```
 
-Não coloque aspas em volta da senha. Como este é um arquivo Java Properties, uma barra invertida literal precisa ser escrita como `\\`. Os parâmetros de conexão fornecidos são para um banco na própria máquina; a implantação em servidor remoto não faz parte do escopo.
+Em `db.senha`, informe a mesma senha definida para `financeiro_app`. Se alterou a porta, o nome do banco ou o usuário, atualize os campos correspondentes.
 
-`config.properties` está no `.gitignore` e não deve ser publicado. Também é possível usar `FINANCEIRO_DB_URL`, `FINANCEIRO_DB_USUARIO` e `FINANCEIRO_DB_SENHA`; variáveis de ambiente, quando presentes, têm prioridade sobre o arquivo.
+Salve o arquivo em UTF-8, na raiz do projeto. Não coloque aspas ao redor dos valores. Caso a senha contenha uma barra invertida literal, escreva-a como `\\`, conforme o formato Java Properties.
 
-### 7. Compilar e executar
+O arquivo `config.properties` contém as credenciais locais e está incluído no `.gitignore`. Cada pessoa deve criar sua própria configuração.
 
-Na raiz do projeto:
+### 6. Compilar a aplicação
+
+A compilação transforma o código-fonte em um arquivo JAR executável.
+
+**Windows — PowerShell:**
 
 ```powershell
 .\mvnw.cmd -version
 .\mvnw.cmd clean package
-.\executar.bat
 ```
 
-A primeira execução precisa de internet para baixar o Maven e as dependências. O primeiro comando deve indicar Maven 3.9.9 e Java 21. O segundo executa os testes de lógica e gera `target/controle-financeiro-1.0.0.jar`; aguarde `BUILD SUCCESS`.
-
-Também é possível abrir diretamente, ainda na raiz do projeto:
-
-```powershell
-java -jar target/controle-financeiro-1.0.0.jar
-```
-
-O programa abre uma janela, não uma página no navegador. Mantenha o serviço MySQL ligado. Uma consulta inicial vazia é normal: cadastre as categorias antes da primeira movimentação.
-
-O ZIP desta entrega inclui o JAR já compilado em `target/`. Nesse pacote, depois de preparar Java, banco e configuração, você pode executar `executar.bat` diretamente. O código versionado no Git não inclui a pasta `target`: ao obtê-lo pelo GitHub, compile com Maven como indicado acima.
-
-Para executar pelo VS Code, abra **Run and Debug**, selecione **Executar controle financeiro** e pressione `F5`. A configuração incluída usa a raiz do projeto como diretório de trabalho, onde está `config.properties`. A tecla `F9` coloca um ponto de parada para acompanhar métodos e comandos SQL no depurador.
-
-## Linux e macOS
-
-Instale JDK 21, MySQL Server 8.4 e, se desejar, VS Code. No Linux, é necessário um ambiente gráfico para abrir a interface Swing. Os instaladores e serviços variam conforme a distribuição; utilize os [downloads oficiais do MySQL](https://dev.mysql.com/downloads/mysql/8.4.html) e [do JDK](https://adoptium.net/temurin/releases/?version=21).
-
-Crie o banco e o usuário com os mesmos comandos SQL das etapas anteriores. Na raiz do projeto:
+**Linux e macOS:**
 
 ```bash
 chmod +x mvnw executar.sh
-cp config.exemplo.properties config.properties
-# Edite config.properties e preencha a senha antes de continuar.
 ./mvnw -version
 ./mvnw clean package
+```
+
+O comando de versão deve indicar Maven 3.9.9 e Java 21.
+
+Na primeira compilação, o Maven baixa as dependências. Depois, compila o código e executa os testes de lógica. Aguarde a mensagem:
+
+```text
+BUILD SUCCESS
+```
+
+O arquivo gerado estará em:
+
+```text
+target/controle-financeiro-1.0.0.jar
+```
+
+A pasta `target/` é criada durante esse processo. Ela não precisa existir quando o repositório é baixado.
+
+**Alternativa com Maven instalado**
+
+Se você já possui Maven instalado, pode compilar diretamente com ele. Essa alternativa também pode ser utilizada caso o Wrapper do Windows apresente a mensagem `Cannot start maven from wrapper`.
+
+Para reproduzir a versão utilizada pelo projeto, utilize o Apache Maven 3.9.9. A instalação consiste em extrair a distribuição e adicionar sua pasta `bin` ao `PATH`. Consulte as [instruções oficiais do Maven](https://maven.apache.org/install.html).
+
+Na raiz do projeto, execute:
+
+```bash
+mvn -version
+mvn clean package
+```
+
+Confira se o Maven está utilizando o JDK 21. O JAR será gerado no mesmo caminho.
+
+### 7. Executar a aplicação
+
+Com a compilação concluída e o servidor MySQL iniciado, execute na raiz do projeto:
+
+```bash
+java -jar target/controle-financeiro-1.0.0.jar
+```
+
+Também é possível utilizar os scripts incluídos no repositório.
+
+**Windows — PowerShell:**
+
+```powershell
+.\executar.bat
+```
+
+**Linux e macOS:**
+
+```bash
 ./executar.sh
 ```
 
-Também pode usar `java -jar target/controle-financeiro-1.0.0.jar`. Se houver várias versões do Java, ajuste `JAVA_HOME` para o JDK 21. `mvnw` usa essa variável quando definida, mesmo que `java -version` no terminal indique outra instalação.
+A aplicação abrirá uma janela com o histórico de movimentações e os totais financeiros.
+
+Na primeira execução, o banco estará vazio. Acesse **Categorias** para cadastrar as classificações desejadas e depois utilize **Nova movimentação** para registrar uma receita ou despesa.
+
+Os scripts `executar.bat` e `executar.sh` abrem o JAR já compilado. Se alterar o código, execute novamente a compilação antes de utilizá-los.
+
+### 8. Executar pelo VS Code
+
+Para trabalhar no código pelo VS Code, instale a extensão [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack), que reúne o suporte necessário para projetos Java.
+
+1. Abra a pasta que contém `pom.xml` em **File → Open Folder**.
+2. Aguarde o carregamento do projeto Java e das dependências.
+3. Abra a paleta de comandos e selecione **Java: Configure Java Runtime**.
+4. Confira se o projeto está associado ao JDK 21.
+5. Configure o banco e o arquivo `config.properties` conforme as etapas anteriores.
+6. Em **Run and Debug**, selecione **Executar controle financeiro** e pressione `F5`.
+
+O repositório já inclui a configuração de execução do VS Code. O banco MySQL precisa permanecer iniciado durante o uso da aplicação.
+
+### 9. Abrir o sistema novamente
+
+Depois da configuração inicial, basta iniciar o MySQL, abrir um terminal na raiz do projeto e executar:
+
+```bash
+java -jar target/controle-financeiro-1.0.0.jar
+```
+
+Também é possível utilizar o script correspondente ao sistema operacional.
+
+Os registros continuam armazenados no MySQL após fechar a aplicação. A criação das tabelas, do usuário e do arquivo de configuração é necessária apenas na preparação inicial do ambiente.
 
 ## Como usar e demonstrar
 
